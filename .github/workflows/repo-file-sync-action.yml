@@ -1,0 +1,46 @@
+name: repo-file-sync-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      action-tag:
+        description: 'Tag for the action'
+        required: true
+        default: 'main'
+
+jobs:
+  file-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Sync Files
+        uses: step-security/dynamic-uses@v1
+        with:
+          uses: step-security/repo-file-sync-action@${{ github.event.inputs.action-tag }}
+          with: >
+            {
+              "GH_PAT": ${{toJson(secrets.TOKEN_WITH_ALL_PERMISSIONS)}}
+            }
+
+  file-sync-main:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Harden Runner
+          uses: step-security/harden-runner@rc
+          with:
+            egress-policy: audit
+
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+
+        - name: Sync Files main
+          uses: step-security/repo-file-sync-action@main
+          with:
+            GH_PAT: ${{secrets.TOKEN_WITH_ALL_PERMISSIONS}}
