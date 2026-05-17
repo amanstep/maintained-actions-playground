@@ -1,0 +1,52 @@
+name: gha-repo-manager
+
+on: 
+  workflow_dispatch:
+    inputs:
+      action-tag:
+        description: 'Tag for the action'
+        required: true
+        default: 'main'
+
+permissions:
+  contents: write
+  issues: write
+        
+jobs:
+  manage-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Apply settings
+        uses: step-security/dynamic-uses@v1
+        with:
+            uses: step-security/gha-repo-manager@${{ github.event.inputs.action-tag }}
+            with: |
+                {
+                    "token": ${{toJson(secrets.TOKEN_WITH_ALL_PERMISSIONS)}},
+                    "action": "apply"
+                }
+
+  manage-repo-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Apply settings
+        uses: step-security/gha-repo-manager@main
+        with: 
+            token: ${{secrets.TOKEN_WITH_ALL_PERMISSIONS}}
+            action: apply
