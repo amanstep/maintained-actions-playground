@@ -30,7 +30,7 @@ jobs:
             uses: step-security/gha-repo-manager@${{ github.event.inputs.action-tag }}
             with: |
                 {
-                    "token": ${{toJson(secrets.TOKEN_WITH_ALL_PERMISSIONS)}},
+                    "token": ${{toJson(secrets.ADMIN_TOKEN)}},
                     "action": "apply"
                 }
 
@@ -48,5 +48,5 @@ jobs:
       - name: Apply settings
         uses: step-security/gha-repo-manager@main
         with: 
-            token: ${{secrets.TOKEN_WITH_ALL_PERMISSIONS}}
+            token: ${{secrets.ADMIN_TOKEN}}
             action: apply
