@@ -14,7 +14,7 @@ jobs:
     env:
       user: amanstep
       check-team: 'test-team'
-      check-more-than-one-team: 'teat-team, Team-1'
+      check-more-than-one-team: 'test-team, Team-1'
       check-not-team: 'dummy2314332'
       failed: "false"
       organization: step-aman
@@ -143,7 +143,7 @@ jobs:
     env:
       user: amanstep
       check-team: 'test-team'
-      check-more-than-one-team: 'teat-team, Team-1'
+      check-more-than-one-team: 'test-team, Team-1'
       check-not-team: 'dummy2314332'
       failed: "false"
       organization: step-aman
