@@ -63,7 +63,7 @@ jobs:
               failed=true
             fi
 
-            expected='["maintained-actions-dev"]'
+            expected='["test-team"]'
             if ! diff -u \
               <(printf '%s' "$expected" | jq -S .) \
               <(printf '%s' "$teams"    | jq -S .) >/dev/null
@@ -186,8 +186,8 @@ jobs:
               failed=true
             fi
 
-            # Expect exact array match: ["maintained-actions-dev"]
-            expected='["maintained-actions-dev"]'
+            # Expect exact array match: ["test-team"]
+            expected='["test-team"]'
             if ! diff -u \
               <(printf '%s' "$expected" | jq -S .) \
               <(printf '%s' "$teams"    | jq -S .) >/dev/null
