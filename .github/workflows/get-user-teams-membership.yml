@@ -1,0 +1,251 @@
+name: get-user-teams-membership
+
+on: 
+  workflow_dispatch:
+    inputs:
+      action-tag:
+        description: 'Tag for the action'
+        required: true
+        default: 'main'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      user: amanstep
+      check-team: 'maintained-actions-dev'
+      check-more-than-one-team: 'maintained-actions-dev, Team-1'
+      check-not-team: 'dummy2314332'
+      failed: "false"
+      organization: step-security
+      
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+            egress-policy: audit
+
+      - name: Get Teams
+        uses: step-security/dynamic-uses@v1
+        id: get-teams
+        with:
+            uses: step-security/get-user-teams-membership@${{ github.event.inputs.action-tag }}
+            with: |
+                {
+                    "organization": ${{ toJson(env.organization) }},
+                    "username": "amanstep",
+                    "GITHUB_TOKEN": ${{ toJson(secrets.ADMIN_TOKEN) }}
+                }
+
+      - name: validate teams
+        run: |
+          set -eo pipefail
+
+          raw_outputs='${{ steps.get-teams.outputs.outputs }}'
+          echo "raw_outputs: $raw_outputs"
+
+          # Extract the "teams" JSON-string value from the nested JSON
+          teams=$(printf '%s' "$raw_outputs" | jq -r '.teams')
+
+          echo "teams extracted: $teams"
+
+          failed=false
+
+          # Ensure 'teams' itself is valid JSON (array)
+          if ! printf '%s' "$teams" | jq -e . >/dev/null 2>&1; then
+            echo "Invalid or empty teams JSON: $teams"
+            failed=true
+          else
+            numberTeams=$(printf '%s' "$teams" | jq 'length')
+
+            if [ "$numberTeams" -ne 1 ]; then
+              echo "Expected 1 team membership for ${{ env.user }}, got $numberTeams"
+              failed=true
+            fi
+
+            expected='["maintained-actions-dev"]'
+            if ! diff -u \
+              <(printf '%s' "$expected" | jq -S .) \
+              <(printf '%s' "$teams"    | jq -S .) >/dev/null
+            then
+              echo "Teams mismatch. Expected $expected, got: $teams"
+              failed=true
+            fi
+          fi
+
+          echo "failed=${failed}" >> "$GITHUB_ENV"
+
+      - name: check if member of ${{ env.check-team }}
+        uses: step-security/dynamic-uses@v1
+        id: check-teams-success
+        with:
+            uses: step-security/get-user-teams-membership@${{ github.event.inputs.action-tag }}
+            with: |
+                {
+                    "organization": ${{ toJson(env.organization) }},
+                    "username": "amanstep",
+                    "GITHUB_TOKEN": ${{ toJson(secrets.ADMIN_TOKEN) }},
+                    "team": ${{ toJson(env.check-team) }}
+
+                }
+
+
+      - name: Not a team member? Fail
+        if: ${{ fromJSON(steps.check-teams-success.outputs.outputs).isTeamMember == 'false' }}
+        run: |
+          echo "failed=true" >> "$GITHUB_ENV"
+
+      #################### Check if it belongs to at least one of two teams
+      - name: check if member of ${{ env.check-more-than-one-team }}
+        uses: step-security/dynamic-uses@v1
+        id: check-more-than-one-team-success
+        with:
+            uses: step-security/get-user-teams-membership@${{ github.event.inputs.action-tag }}
+            with: |
+                {
+                    "organization": ${{ toJson(env.organization) }},
+                    "username": "amanstep",
+                    "GITHUB_TOKEN": ${{ toJson(secrets.ADMIN_TOKEN) }},
+                    "team": ${{ toJson(env.check-more-than-one-team) }}
+                }
+
+      - name: Not a team member in at least one of the teams? Fail
+        if: ${{ fromJSON(steps.check-more-than-one-team-success.outputs.outputs).isTeamMember == 'false' }}
+        run: |
+          echo "Expected to belong to at least one team. Failing"
+          echo "failed=true" >> "$GITHUB_ENV"
+
+      - name: check if member of ${{ env.check-not-team }} should not be
+        uses: step-security/dynamic-uses@v1
+        id: check-not-team
+        with:
+            uses: step-security/get-user-teams-membership@${{ github.event.inputs.action-tag }}
+            with: |
+                {
+                    "organization": ${{ toJson(env.organization) }},
+                    "username": "amanstep",
+                    "GITHUB_TOKEN": ${{ toJson(secrets.ADMIN_TOKEN) }},
+                    "team": ${{ toJson(env.check-not-team) }}
+                }
+
+      - name: Dummy Team membership? Fail
+        if: ${{ fromJSON(steps.check-not-team.outputs.outputs).isTeamMember == 'true' }}
+        run: |
+          echo "failed=true" >> "$GITHUB_ENV"
+
+      - name: Tests failed?
+        if: ${{ env.failed == 'true' }}
+        run:
+          exit 1
+
+  test-main:
+    runs-on: ubuntu-latest
+    env:
+      user: amanstep
+      check-team: 'maintained-actions-dev'
+      check-more-than-one-team: 'maintained-actions-dev, Team-1'
+      check-not-team: 'dummy2314332'
+      failed: "false"
+      organization: step-security
+      
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+            egress-policy: audit
+
+      - name: Get Teams
+        id: get-teams
+        uses: step-security/get-user-teams-membership@main
+        with:
+            organization: ${{ env.organization }}
+            username: amanstep
+            GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+                
+
+      - name: validate teams
+        run: |
+          set -eo pipefail
+
+          # Direct output from the action (JSON array expected)
+          teams='${{ steps.get-teams.outputs.teams }}'
+          echo "found teams ${teams}"
+
+          failed=false
+
+          # Ensure it's valid JSON and an array
+          if ! printf '%s' "$teams" | jq -e 'type == "array"' >/dev/null 2>&1; then
+            echo "Invalid or empty teams JSON: ${teams:-<empty>}"
+            failed=true
+          else
+            numberTeams=$(printf '%s' "$teams" | jq 'length')
+
+            # Expect exactly 1 team
+            if [ "$numberTeams" -ne 1 ]; then
+              echo "Expected 1 team membership for ${{ env.user }}, got $numberTeams"
+              failed=true
+            fi
+
+            # Expect exact array match: ["maintained-actions-dev"]
+            expected='["maintained-actions-dev"]'
+            if ! diff -u \
+              <(printf '%s' "$expected" | jq -S .) \
+              <(printf '%s' "$teams"    | jq -S .) >/dev/null
+            then
+              echo "Teams mismatch. Expected $expected, got: $teams"
+              failed=true
+            fi
+          fi
+
+          echo "failed=${failed}" >> "$GITHUB_ENV"
+
+      - name: check if member of ${{ env.check-team }}
+        id: check-teams-success
+        uses: step-security/get-user-teams-membership@main
+        with: 
+            organization: ${{ env.organization }}
+            username: amanstep
+            GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+            team: ${{ env.check-team }}
+
+
+      - name: Not a team member? Fail
+        if: ${{ steps.check-teams-success.outputs.isTeamMember == 'false' }}
+        run: |
+          echo "failed=true" >> "$GITHUB_ENV"
+
+      #################### Check if it belongs to at least one of two teams
+      - name: check if member of ${{ env.check-more-than-one-team }}
+        id: check-more-than-one-team-success
+        uses: step-security/get-user-teams-membership@main
+        with:
+            organization: ${{ env.organization }}
+            username: amanstep
+            GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+            team: ${{ env.check-more-than-one-team }}
+
+      - name: Not a team member in at least one of the teams? Fail
+        if: ${{ steps.check-more-than-one-team-success.outputs.isTeamMember == 'false' }}
+        run: |
+          echo "Expected to belong to at least one team. Failing"
+          echo "failed=true" >> "$GITHUB_ENV"
+
+      - name: check if member of ${{ env.check-not-team }} should not be
+        id: check-not-team
+        uses: step-security/get-user-teams-membership@main
+        with: 
+            organization: ${{ env.organization }}
+            username: amanstep
+            GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+            team: ${{ env.check-not-team }}
+                
+
+      - name: Dummy Team membership? Fail
+        if: ${{ steps.check-not-team.outputs.isTeamMember == 'true' }}
+        run: |
+          echo "failed=true" >> "$GITHUB_ENV"
+
+      - name: Tests failed?
+        if: ${{ env.failed == 'true' }}
+        run:
+          exit 1
