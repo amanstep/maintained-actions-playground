@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       user: amanstep
-      check-team: 'maintained-actions-dev'
-      check-more-than-one-team: 'maintained-actions-dev, Team-1'
+      check-team: 'test-team'
+      check-more-than-one-team: 'teat-team, Team-1'
       check-not-team: 'dummy2314332'
       failed: "false"
-      organization: step-security
+      organization: step-aman
       
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -142,11 +142,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       user: amanstep
-      check-team: 'maintained-actions-dev'
-      check-more-than-one-team: 'maintained-actions-dev, Team-1'
+      check-team: 'test-team'
+      check-more-than-one-team: 'teat-team, Team-1'
       check-not-team: 'dummy2314332'
       failed: "false"
-      organization: step-security
+      organization: step-aman
       
     steps:
       - name: Harden the runner (Audit all outbound calls)
