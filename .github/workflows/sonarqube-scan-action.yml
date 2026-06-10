@@ -1,0 +1,68 @@
+name: sonarqube-scan-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      action-tag:
+        description: 'Tag for the action'
+        required: true
+        default: 'main'
+
+jobs:
+  sonarqube-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: step-security/dynamic-uses@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: http://not_actually_used
+          SONAR_SCANNER_JSON_PARAMS: '{"sonar.scanner.internal.dumpToFile": "./output.properties"}'
+        with:
+          uses: step-security/sonarqube-scan-action@${{ github.event.inputs.action-tag }}
+          with: |
+            {
+              "args": "-Dsonar.projectKey=sonarqube-scan-action-test -Dsonar.sources=."
+            }
+
+      - name: Assert
+        run: cat ./output.properties
+
+  ## MAIN_JOB_START
+  # sonarqube-scan-main:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Harden the runner (Audit all outbound calls)
+  #       uses: step-security/harden-runner@rc
+  #       with:
+  #         egress-policy: audit
+  #
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #
+  #     - name: SonarQube Scan
+  #       uses: step-security/sonarqube-scan-action@main
+  #       env:
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  #         SONAR_HOST_URL: http://not_actually_used
+  #         SONAR_SCANNER_JSON_PARAMS: '{"sonar.scanner.internal.dumpToFile": "./output.properties"}'
+  #       with:
+  #         args: >
+  #           -Dsonar.projectKey=sonarqube-scan-action-test
+  #           -Dsonar.sources=.
+  #
+  #     - name: Assert
+  #       run: cat ./output.properties
+  ## MAIN_JOB_END
