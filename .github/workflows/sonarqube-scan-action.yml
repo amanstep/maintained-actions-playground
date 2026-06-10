@@ -26,8 +26,6 @@ jobs:
         uses: step-security/dynamic-uses@v1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: http://not_actually_used
-          SONAR_SCANNER_JSON_PARAMS: '{"sonar.scanner.internal.dumpToFile": "./output.properties"}'
         with:
           uses: step-security/sonarqube-scan-action@${{ github.event.inputs.action-tag }}
           with: |
@@ -56,8 +54,6 @@ jobs:
   #       uses: step-security/sonarqube-scan-action@main
   #       env:
   #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #         SONAR_HOST_URL: http://not_actually_used
-  #         SONAR_SCANNER_JSON_PARAMS: '{"sonar.scanner.internal.dumpToFile": "./output.properties"}'
   #       with:
   #         args: >
   #           -Dsonar.projectKey=sonarqube-scan-action-test
