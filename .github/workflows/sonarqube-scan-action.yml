@@ -33,9 +33,6 @@ jobs:
               "args": "-Dsonar.projectKey=sonarqube-scan-action-test -Dsonar.sources=."
             }
 
-      - name: Assert
-        run: cat ./output.properties
-
   ## MAIN_JOB_START
   # sonarqube-scan-main:
   #   runs-on: ubuntu-latest
@@ -58,7 +55,4 @@ jobs:
   #         args: >
   #           -Dsonar.projectKey=sonarqube-scan-action-test
   #           -Dsonar.sources=.
-  #
-  #     - name: Assert
-  #       run: cat ./output.properties
   ## MAIN_JOB_END
