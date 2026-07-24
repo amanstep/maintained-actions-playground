@@ -1,0 +1,75 @@
+name: octo-sts-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      action-tag:
+        description: 'Tag for the action'
+        required: true
+        default: 'main'
+
+permissions: {}
+
+jobs:
+  octo-sts:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Get OctoSTS Token
+        id: octo-sts
+        uses: step-security/dynamic-uses@v1
+        with:
+          uses: step-security/octo-sts-action@${{ github.event.inputs.action-tag }}
+          with: |
+            {
+              "scope": "amanstep/maintained-actions-playground",
+              "identity": "playground-test"
+            }
+
+      - name: Verify token
+        run: |
+          TOKEN="${{ fromJson(steps.octo-sts.outputs.outputs).token }}"
+          if [ -n "$TOKEN" ]; then
+            echo "Token created successfully"
+          else
+            echo "Token is empty!"
+            exit 1
+          fi
+
+  # MAIN_JOB_START
+  octo-sts-main:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Get OctoSTS Token
+        id: octo-sts
+        uses: step-security/octo-sts-action@main
+        with:
+          scope: amanstep/maintained-actions-playground
+          identity: playground-test
+
+      - name: Verify token
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "Token created successfully"
+          else
+            echo "Token is empty!"
+            exit 1
+          fi
+        env:
+          TOKEN: ${{ steps.octo-sts.outputs.token }}
+  # MAIN_JOB_END
