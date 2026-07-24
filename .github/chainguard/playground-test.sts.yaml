@@ -1,0 +1,7 @@
+issuer: https://token.actions.githubusercontent.com
+subject: repo:amanstep/maintained-actions-playground:workflow_dispatch
+claim_pattern:
+  workflow_ref: amanstep/maintained-actions-playground/\.github/workflows/octo-sts-action\.yaml@refs/heads/main
+
+permissions:
+  contents: read
