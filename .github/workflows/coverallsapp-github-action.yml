@@ -1,0 +1,53 @@
+name: coverallsapp-github-action
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coveralls:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create sample coverage file
+        run: |
+          mkdir -p src
+          echo 'function main() {}' > src/main.js
+          printf 'TN:\nSF:src/main.js\nDA:1,1\nLF:1\nLH:1\nend_of_record\n' > coverage.lcov
+
+      - name: Coveralls
+        uses: step-security/coverallsapp-github-action@release
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage.lcov
+          flag-name: unit
+          parallel: true
+          fail-on-error: 'false'
+
+  coveralls-finish:
+    needs: coveralls
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@rc
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Coveralls finished
+        uses: step-security/coverallsapp-github-action@release
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
+          fail-on-error: 'false'
