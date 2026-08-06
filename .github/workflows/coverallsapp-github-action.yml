@@ -25,7 +25,7 @@ jobs:
           printf 'TN:\nSF:src/main.js\nDA:1,1\nLF:1\nLH:1\nend_of_record\n' > coverage.lcov
 
       - name: Coveralls
-        uses: step-security/coverallsapp-github-action@release
+        uses: step-security/coverallsapp-github-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: coverage.lcov
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Coveralls finished
-        uses: step-security/coverallsapp-github-action@release
+        uses: step-security/coverallsapp-github-action@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
