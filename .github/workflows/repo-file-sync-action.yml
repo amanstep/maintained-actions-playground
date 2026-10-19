@@ -27,7 +27,7 @@ jobs:
           uses: step-security/repo-file-sync-action@${{ github.event.inputs.action-tag }}
           with: >
             {
-              "GH_PAT": ${{toJson(secrets.ADMIN_TOKEN)}}
+              "GH_PAT": ${{toJson(secrets.REPO_SYNC_TOKEN)}}
             }
 
   file-sync-main:
@@ -44,4 +44,4 @@ jobs:
         - name: Sync Files main
           uses: step-security/repo-file-sync-action@main
           with:
-            GH_PAT: ${{secrets.ADMIN_TOKEN}}
+            GH_PAT: ${{secrets.REPO_SYNC_TOKEN}}
